@@ -4,28 +4,26 @@ Helper module for sqs messages
 import json
 import os
 import sys
-import time
 import boto3
 from botocore.exceptions import ClientError
 
 # add project root to sys path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+#sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from helpers.base_helper import BaseHelper
-from conf import sqs_conf
 
 class SqsHelper(BaseHelper):
     """
     SQS Helper object
     """
 
-    def get_sqs_client(self):
+    def get_sqs_client(self,config):
         """
         Return sqs_client object
         :param self:
         :return sqs_client: SQS client object
         """
         try:
-            sqs_client = boto3.client('sqs', config=sqs_conf.config)
+            sqs_client = boto3.client('sqs', config=config)
             self.write(f'Created SQS client')
         except ClientError as err:
             self.write(f'Exception - {err}, Unable to create SQS client', level='error')
@@ -34,24 +32,7 @@ class SqsHelper(BaseHelper):
 
         return sqs_client
 
-    def get_sqs_queue(self, queue_name):
-        """
-        Get queue
-        :param self:
-        :param queue_name: queue name
-        :return queue: queue object
-        """
-        try:
-            queue = boto3.resource('sqs').get_queue_by_name(QueueName=queue_name)
-            self.write(f'Attained SQS queue by name')
-        except ClientError as err:
-            self.write(f'Exception - {err}, Unable to get SQS queue', level='error')
-        except Exception as err:
-            self.write(f'Unable to get SQS queue, due to {err}', level='error') 
-
-        return queue
-
-    def get_message_from_queue(self, queue_name, attempts=3):
+    def get_message_from_queue(self, queue_name, config, attempts=3):
         """
         Get message from queue
         :param self:
@@ -60,8 +41,8 @@ class SqsHelper(BaseHelper):
         :return messages: messages list object
         """
         try:
-            sqs_client = self.get_sqs_client()
-            queue = self.get_sqs_queue(queue_name)
+            sqs_client = self.get_sqs_client(config)
+            queue = boto3.resource('sqs').get_queue_by_name(QueueName=queue_name)
             messages = []
 
             # run retrieve request with multiple attempts
@@ -88,20 +69,20 @@ class SqsHelper(BaseHelper):
         :param self:
         :param message_object: message object attained through receive_message sqs method
         :param message: message stripped from the message object
+        :receive message syntax: https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/sqs.html#SQS.Client.receive_message
         """
         try:
             msg_body = []
             messages = message_object.get('Messages',[])
-            if messages:
-                for msg in messages:
-                    str_body = msg.get('Body')
-                    if str_body:
-                        dict_body = json.loads(str_body)
-                        get_msg = json.loads(dict_body.get('Message'))
-                        if get_msg:
-                            msg_body.append(get_msg.get('msg'))
+            for msg in messages:
+                str_body = msg.get('Body')
+                if str_body:
+                    dict_body = json.loads(str_body)
+                    msg_body.append(json.loads(dict_body.get('Message')).get('msg'))
             if msg_body:
                 self.write(f'Message found - {msg_body}')
+            else:
+                self.write(f'No messages found in the message object')    
         except Exception as err:
             self.write(f'Unable to strip message from message body, due to {err}', level='error')
 
