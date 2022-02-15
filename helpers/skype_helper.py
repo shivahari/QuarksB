@@ -4,9 +4,6 @@ Helper module for Skype
 import os
 import sys
 import requests
-
-# add project root to sys path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from helpers.base_helper import BaseHelper
 from conf import skype_conf
 
