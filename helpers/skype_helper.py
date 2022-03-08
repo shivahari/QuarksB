@@ -7,15 +7,18 @@ import requests
 # add project root to sys path
 #sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from helpers.base_helper import BaseHelper
+from conf import skype_conf as conf
 
 class SkypeHelper(BaseHelper):
     """
     Skype Helper object
     """
 
-    def post_message_on_skype(self, message, skype_url):
+    def post_message_on_skype(self, message, skype_url=None):
         "Posts a predefined message on the set Skype channel"
         try:
+            if skype_url is None:
+                skype_url = conf.SKYPE_SENDER_ENDPOINT
             headers = {'Content-Type': 'application/json'}
             payload = {"msg" : message,
                       "channel": os.environ['CHANNEL_ID'],
