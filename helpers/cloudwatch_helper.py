@@ -15,6 +15,7 @@ class CloudWatchHelper(BaseHelper):
     """
     def __init__(self):
         "Class constructor"
+        super().__init__()
         self.client = boto3.client('logs')
 
     def get_query_id(self, log_group, query):
@@ -33,11 +34,9 @@ class CloudWatchHelper(BaseHelper):
                                             queryString= query
                                             )
         except ClientError as error:
-            print(f'Botocore exception :\n {error}\n')
-            raise Exception('Unable to schedule CloudWatchLogs query!') from error
+            self.write(f'Botocore Exception - {error}, Unable to schedule CloudWatchLogs query!', level='error')
         except Exception as error:
-            print(f'General exception :\n {error}\n')
-            raise Exception('Unable to schedule CloudWatchLogs query!') from error
+            self.write(f'Exception - {error}, Unable to schedule CloudWatchLogs query!', level='error')
         return start_query_response.get('queryId', None)
 
     def get_message_from_logs(self, cloudwatch_log_group, cloudwatch_query):
@@ -50,23 +49,24 @@ class CloudWatchHelper(BaseHelper):
         """
         try:
             query_id = self.get_query_id(cloudwatch_log_group, cloudwatch_query)
-            query_response = None
-            messages_from_log = []
-            query_status_flag = True
-            while query_status_flag:
-                query_response = self.client.get_query_results(queryId=query_id)
-                if query_response.get('status', None)  == 'Complete':
-                    query_status_flag = False
-                else:
-                    print('Waiting for CloudWatchLogs query to complete..')
-                    time.sleep(2)
-            messages_from_log = self.extract_messages(query_response)
+            if query_id is not None:
+                query_response = None
+                messages_from_log = []
+                query_status_flag = True
+                while query_status_flag:
+                    query_response = self.client.get_query_results(queryId=query_id)
+                    if query_response.get('status', None)  == 'Complete':
+                        query_status_flag = False
+                    else:
+                        self.write('Waiting for CloudWatchLogs query to complete..')
+                        time.sleep(2)
+                messages_from_log = self.extract_messages(query_response)
+            else:
+                self.write('Unable to fetch queryId to get CloudWatchLogs messages!', level='error')
         except ClientError as error:
-            print(f'Botocore exception :\n {error}\n')
-            raise Exception('Unable to fetch CloudWatch API response!') from error
+            self.write(f'Botocore Exception - {error}, Unable to fetch CloudWatchLogs API response!', level='error')
         except Exception as error:
-            print(f'General exception :\n {error}\n')
-            raise Exception('Unable to fetch CloudWatch API response!') from error
+            self.write(f'Exception - {error}, Unable to fetch CloudWatchLogs API response!', level='error')
         return messages_from_log
 
     def extract_messages(self, logs_query_response):
@@ -77,4 +77,5 @@ class CloudWatchHelper(BaseHelper):
         :return messages: list object
         """
         messages = logs_query_response.get('results', [])
+        self.write(f'CloudWatchLogs messages : {messages}')
         return messages
