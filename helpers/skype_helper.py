@@ -4,7 +4,7 @@ Helper module for Skype
 import os
 import sys
 import requests
-from helpers.base_helper import BaseHelper
+from .base_helper import BaseHelper
 
 class SkypeHelper(BaseHelper):
     """

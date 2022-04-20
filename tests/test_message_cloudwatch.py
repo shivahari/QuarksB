@@ -5,8 +5,8 @@
 import os
 import sys
 import time
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from conf import skype_conf, cloudwatch_conf
+
+from ..conf import skype_conf, cloudwatch_conf
 
 def test_message_received_lambda(cloudwatch_instance, skype_instance):
     """

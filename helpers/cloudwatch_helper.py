@@ -7,7 +7,7 @@ import sys
 import time
 import boto3
 from botocore.exceptions import ClientError
-from helpers.base_helper import BaseHelper
+from .base_helper import BaseHelper
 
 class CloudWatchHelper(BaseHelper):
     """

@@ -5,9 +5,9 @@ import concurrent.futures
 import os
 import sys
 import pytest
-from helpers.cloudwatch_helper import CloudWatchHelper
-from helpers.sqs_helper import SqsHelper
-from helpers.skype_helper import SkypeHelper
+from ..helpers.cloudwatch_helper import CloudWatchHelper
+from ..helpers.sqs_helper import SqsHelper
+from ..helpers.skype_helper import SkypeHelper
 
 @pytest.fixture
 def sqs_instance(request):
